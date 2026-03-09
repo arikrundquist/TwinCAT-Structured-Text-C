@@ -35,5 +35,5 @@ def touch_file(path: Path) -> None:
 
 def write_file(path: Path, content: str) -> None:
     touch_file(path)
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write(content)
