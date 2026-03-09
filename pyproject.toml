@@ -1,0 +1,53 @@
+[project]
+name = "TwinCAT-Structured-Text-C"
+version = "0"
+dependencies = [
+    "click==8.3.1",
+    "mypy==1.19.1",
+]
+
+[project.scripts]
+tc2st = "tcstc.main:tc2st"
+st2tc = "tcstc.main:st2tc"
+
+
+[tool.mypy]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = false
+
+strict_equality = true
+extra_checks = true
+
+check_untyped_defs = true
+disallow_any_generics = true
+
+disallow_untyped_calls = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+
+no_implicit_reexport = true
+warn_return_any = true
+
+exclude = [".venv", "build"]
+
+[[tool.mypy.overrides]]
+module = ["click.*", "pytest.*"]
+follow_untyped_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+filterwarnings = [
+    "error",                                 # convert all warnings to errors (except those ignored below)
+]
+
+
+[tool.coverage.run]
+branch = true
+omit = [
+    # no need to run coverage on these files
+    "**/test/*",
+]
+
+[tool.coverage.report]
+exclude_also = ["pass", "assert_never"]
