@@ -4,11 +4,13 @@ version = "0"
 dependencies = [
     "click==8.3.1",
     "mypy==1.19.1",
+    "parsy==2.2",
 ]
 
 [project.scripts]
 tc2st = "tcstc.main:tc2st"
 st2tc = "tcstc.main:st2tc"
+stfmt = "tcstc.main:stfmt"
 
 
 [tool.mypy]
@@ -40,7 +42,6 @@ pythonpath = ["src"]
 filterwarnings = [
     "error",                                 # convert all warnings to errors (except those ignored below)
 ]
-
 
 [tool.coverage.run]
 branch = true

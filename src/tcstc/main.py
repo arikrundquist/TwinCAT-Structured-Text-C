@@ -1,12 +1,22 @@
+import logging
 import shutil
+from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
 import click
 
+from tcstc.formatters.structured_text import format
+from tcstc.models.twincat import TwinCatObject
+from tcstc.parsers.structured_text import structured_text_parser
 from tcstc.project import Project
-from tcstc.twincat.models import TwinCatObject
-from tcstc.util.utils import convert_path, expect_one, find_by_extension, write_file
+from tcstc.util.utils import (
+    clean_structured_text,
+    convert_path,
+    expect_one,
+    find_by_extension,
+    write_file,
+)
 
 
 def _project_option(name: str) -> Any:
@@ -75,10 +85,35 @@ def tc2st(src: str, dest: str) -> None:
                 path=project_file,
                 dest_folder=folder,
             )
-            write_file(converted, object.get_structured_text())
+
+            structured_text = clean_structured_text(object.get_structured_text())
+            write_file(converted, structured_text)
+
+    stfmt(["--dir", dest])
 
 
-@click.command("Insert PLC code into the specified project.")
+@click.command(help="Format structured text.")
+@_directory_option("--dir")
+def stfmt(dir: str) -> None:
+    folder = _get_folder_path(dir)
+    for file in find_by_extension("", folder):
+        with suppress(Exception):
+            with open(file, "r") as f:
+                structured_text = clean_structured_text(f.read())
+            try:
+                parsed = structured_text_parser.parse(structured_text)(file)
+                structured_text = "\n\n".join(format(node) for node in parsed)
+
+            except Exception as e:
+                logging.error(f"Failed to parse {file}")
+                logging.exception(e)
+                raise
+
+            with open(file, "w") as f:
+                f.write(structured_text)
+
+
+@click.command(help="Insert PLC code into the specified project.")
 @_directory_option("--src")
 @_project_option("--dest")
 def st2tc(src: str, dest: str) -> None:

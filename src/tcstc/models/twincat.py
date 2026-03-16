@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator, Literal, ParamSpec, Sequence, final, override
 from xml.etree import ElementTree as XML
+
+from tcstc.parsers.helpers import token
+from tcstc.parsers.structured_text import attributes_parser
 
 _P = ParamSpec("_P")
 
@@ -103,10 +105,6 @@ class TwinCatDUT(TwinCatObject):
     def get_from_xml(cls, xml: XML.Element) -> TwinCatDUT:
         (declaration,) = _find_tags(xml, "DUT/Declaration", min=1, max=1)
         return TwinCatDUT(declaration.text or "")
-
-
-def _strip_extra_newlines(string: str) -> str:
-    return re.sub("\n(\\s*)\n", "\n\n", string)
 
 
 @dataclass
@@ -207,14 +205,12 @@ class TwinCatIO(TwinCatObject):
             property.get_structured_text() for property in self.properties
         )
         methods = "\n\n".join(method.get_structured_text() for method in self.methods)
-        return _strip_extra_newlines(
-            f"""
+        return f"""
 {self.declaration}
 {properties}
 {methods}
 END_INTERFACE
 """
-        )
 
     @override
     @classmethod
@@ -248,22 +244,20 @@ class TwinCatPOU(TwinCatObject):
             property.get_structured_text() for property in self.properties
         )
         methods = "\n\n".join(method.get_structured_text() for method in self.methods)
-        return _strip_extra_newlines(
-            f"""
+        return f"""
 {self.declaration}
 {self.implementation}
 {properties}
 {methods}
 END_{self.kind}
 """
-        )
 
     @classmethod
     def _get_kind(cls, declaration: str) -> str:
-        kinds = {"FUNCTION", "FUNCTION_BLOCK", "PROGRAM"}
-        found = [kind for kind in kinds if f"{kind} " in declaration]
-        assert len(found) == 1, declaration
-        (kind,) = found
+        kind_parser = attributes_parser >> token(
+            "FUNCTION", "FUNCTION_BLOCK", "PROGRAM"
+        )
+        kind, _ = kind_parser.parse_partial(declaration.lower())
         return kind
 
     @override

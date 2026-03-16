@@ -9,4 +9,8 @@ Current functionality:
 # extract structured text from the specified project
 # NOTE: clobbers anything already existing in the destination folder
 tc2st --src /path/to/project.plcproj --dest /path/to/destination/folder
+
+# Structured Text Format
+# format structured text in the specified folder
+stfmt --dir /path/to/structured/text/folder
 ```
