@@ -65,11 +65,23 @@ def _get_folder_path(path: str) -> Path:
 @click.command(help="Extract PLC code from the specified project.")
 @_project_option("--src")
 @_directory_option("--dest")
-def tc2st(src: str, dest: str) -> None:
+@click.option(
+    "--no-fmt",
+    "fmt",
+    flag_value=False,
+    default=True,
+    help="Disable reformatting after extraction. (default)",
+)
+@click.option(
+    "--fmt", "fmt", flag_value=True, help="Enable reformatting after extraction."
+)
+def tc2st(src: str, dest: str, fmt: bool) -> None:
     project_path = _get_project_path(src)
     project_root = project_path.parent
     project = Project(project_path)
     folder = _get_folder_path(dest)
+    assert isinstance(fmt, bool)
+
     shutil.rmtree(folder, ignore_errors=True)
 
     for project_file in project.get_project_files():
@@ -89,7 +101,8 @@ def tc2st(src: str, dest: str) -> None:
             structured_text = clean_structured_text(object.get_structured_text())
             write_file(converted, structured_text)
 
-    stfmt(["--dir", dest])
+    if fmt:
+        stfmt(["--dir", dest])
 
 
 @click.command(help="Format structured text.")
