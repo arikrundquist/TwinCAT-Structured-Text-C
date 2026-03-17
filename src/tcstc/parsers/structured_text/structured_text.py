@@ -1,26 +1,41 @@
 from __future__ import annotations
 
+from enum import StrEnum
 from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Final,
     Generator,
     TypeAlias,
     TypeVar,
 )
 
 import parsy
-from tcstc.models import structured_text as st
-from tcstc.parsers.helpers import (
-    enum,
-    map,
-    parse,
-    token,
-    whitespace_lines,
-    whitespace_parser,
-)
+from tcstc.models.pointer import Pointer
+from tcstc.models.structured_text import structured_text as st
+from tcstc.parsers.helpers import map, parse
 
+_E = TypeVar("_E", bound=StrEnum)
 _T = TypeVar("_T")
+
+
+def token(*tokens: str) -> parsy.Parser[str]:
+    return parsy.string_from(*tokens, transform=str.upper) << whitespace_parser
+
+
+def enum(*items: _E) -> parsy.Parser[_E]:
+    lookup = {item.value: item for item in items}
+    return token(*lookup.keys()).map(lambda value: lookup[value])
+
+
+whitespace_lines: Final = Pointer(0)
+
+
+@parsy.generate
+def whitespace_parser() -> Generator[Any, Any, None]:
+    whitespace = yield from parse(parsy.regex(r"[ \t\r\n]*"))
+    whitespace_lines.value = whitespace.count("\n")
 
 
 def sep_trailing_comma(parser: parsy.Parser[_T]) -> parsy.Parser[list[_T]]:

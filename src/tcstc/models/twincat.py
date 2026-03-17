@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Iterable, Iterator, Literal, ParamSpec, Sequence, final, override
 from xml.etree import ElementTree as XML
 
-from tcstc.parsers.helpers import token
-from tcstc.parsers.structured_text import attributes_parser
+from tcstc.models.structured_text.tokens import Keyword
+from tcstc.parsers.structured_text.tokens import parser
 
 _P = ParamSpec("_P")
 
@@ -254,11 +254,14 @@ END_{self.kind}
 
     @classmethod
     def _get_kind(cls, declaration: str) -> str:
-        kind_parser = attributes_parser >> token(
-            "FUNCTION", "FUNCTION_BLOCK", "PROGRAM"
-        )
-        kind, _ = kind_parser.parse_partial(declaration.lower())
-        return kind
+        tokens = parser.parse(declaration)
+        kinds = [Keyword.FUNCTION, Keyword.FUNCTION_BLOCK, Keyword.PROGRAM]
+        for token in tokens:
+            for kind in kinds:
+                if token == kind:
+                    return kind.value
+
+        assert False
 
     @override
     @classmethod

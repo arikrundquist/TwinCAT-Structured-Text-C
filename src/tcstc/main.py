@@ -8,7 +8,7 @@ import click
 
 from tcstc.formatters.structured_text import format
 from tcstc.models.twincat import TwinCatObject
-from tcstc.parsers.structured_text import structured_text_parser
+from tcstc.parsers.structured_text.structured_text import structured_text_parser
 from tcstc.project import Project
 from tcstc.util.utils import (
     clean_structured_text,

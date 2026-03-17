@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from typing import Iterator, TypeVar, override
 
-from tcstc.models import structured_text as st
+from tcstc.models.structured_text import structured_text as st
 
 _T = TypeVar("_T", bound=st.ASTNode)
 

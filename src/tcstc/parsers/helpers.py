@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any, Callable, Final, Generator, TypeVar, TypeVarTuple, Unpack
+from typing import Any, Callable, Generator, TypeVar, TypeVarTuple, Unpack
 
 import parsy
-from tcstc.models.pointer import Pointer
 
 _T = TypeVar("_T")
 _E = TypeVar("_E", bound=StrEnum)
@@ -22,19 +21,28 @@ def map(
     return parser.map(lambda values: func(*values))
 
 
-def token(*tokens: str) -> parsy.Parser[str]:
-    return parsy.string_from(*tokens, transform=str.upper) << whitespace_parser
+def case_insensitive(*strings: str) -> parsy.Parser[str]:
+    return parsy.string_from(*strings, transform=str.upper)
 
 
-def enum(*items: _E) -> parsy.Parser[_E]:
+def symbol(*items: _E) -> parsy.Parser[_E]:
     lookup = {item.value: item for item in items}
-    return token(*lookup.keys()).map(lambda value: lookup[value])
+    return case_insensitive(*lookup.keys()).map(lambda value: lookup[value])
 
 
-whitespace_lines: Final = Pointer(0)
+def symbols(Symbols: type[_E]) -> parsy.Parser[_E]:
+    return symbol(*Symbols)
+
+
+def keyword(*items: _E) -> parsy.Parser[_E]:
+    return symbol(*items) << parsy.regex("(?![a-zA-Z_])")
+
+
+def keywords(Keywords: type[_E]) -> parsy.Parser[_E]:
+    return keyword(*Keywords) << parsy.regex("(?![a-zA-Z_])")
 
 
 @parsy.generate
-def whitespace_parser() -> Generator[Any, Any, None]:
-    whitespace = yield from parse(parsy.regex(r"[ \t\r\n]*"))
-    whitespace_lines.value = whitespace.count("\n")
+def whitespace_parser() -> Generator[Any, Any, int]:
+    whitespace = yield from parse(parsy.regex(r"[ \t\r\n]+"))
+    return whitespace.count("\n")
